@@ -1,72 +1,57 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import { lightsOfCity } from './iluminacao.js';
-import { preferenceSemafaro } from './semafaro.js';
+import { Horario, lightsOfCity } from './iluminacao.js';
+import cors from 'cors';
 
-const server = express();
-server.use(bodyParser.json()); 
+const app = express();
+const port = process.env.PORT || 3000;
 
-// server.route('/')
-//     .all((req, res, next) => {
-//         next();
-//     })
-//     .get((req, res) => {
-//         res.set('Content-Type', 'application/json');
-//         res.json({ message: 'Bem-vindo ao servidor de sensores!' });
-//     })
-//     .post((req, res) => {
-//         const { sensorLum, distanciasemafaroUm, distanciasemafaroDois } = req.body;
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
 
-//         const resposta = {
-//             sensorLum,
-//             distanciasemafaroUm,
-//             distanciasemafaroDois,
-//             status: 'Dados recebidos!'
-//         };
+let sensorLumAtual = null; 
+let semafaroUmAtivo = 0; // Usando 0 para inativo
+let semafaroDoisAtivo = 0; // Usando 0 para inativo
 
-//         res.set('Content-Type', 'application/json');
-//         res.json(resposta);
-//     });
-
-server.route('/semafaros')
-    .all((req, res, next) => {
-        next();
-    })
+// Rota única para controlar semáforos e iluminação
+app.route('/')
     .post((req, res) => {
-        const { distanciasemafaroUm, distanciasemafaroDois } = req.body;
+        const { DSU, DSD, SL } = req.body;
 
+        // Atualiza o valor do sensor de luminosidade
+        sensorLumAtual = SL;
 
-        const { semafaroUm, semafaroDois } = preferenceSemafaro(distanciasemafaroUm, distanciasemafaroDois)
+        // Lógica de controle dos semáforos
+        semafaroUmAtivo = DSU < DSD ? 1 : 0; // Semáforo um ativo se a distância for menor
+        semafaroDoisAtivo = semafaroUmAtivo ? 0 : 1; // Semáforo dois ativo se o um estiver inativo
 
-        const resposta = {
-            semafaroUm,
-            semafaroDois
-        }
-        res.set('Content-Type', 'application/json')
-        res.json(resposta)
+        // Estado das luzes baseado no sensor de iluminação
+        const estadoLuzes = lightsOfCity(SL);
         
-    })
-
-
-//Iluminação da cidade
-server.route('/iluminacao')
-    .all((req, res, next) => {
-        next();
-    })
-    .post((req, res) => {
-        const { sensorLum } = req.body;
-
-        const estadoLuzes = lightsOfCity(sensorLum);
         const resposta = {
-            sensorLum,
-            aceso: estadoLuzes,
-            status: "Sensor recebido"
+            SU: semafaroUmAtivo,
+            SD: semafaroDoisAtivo,
+            SL,
+            IL: estadoLuzes,
         };
 
-        res.set('Content-Type', 'application/json');
-        res.json(resposta);
+        res.status(200).json(resposta);
+    })
+    .get((req, res) => {
+        // Usa o valor atual do sensorLum
+        const estadoLuzes = sensorLumAtual !== null ? lightsOfCity(sensorLumAtual) : 0;
+
+        const resposta = {
+            sensorLum: sensorLumAtual,
+            IL: estadoLuzes,
+            SU: semafaroUmAtivo,
+            SD: semafaroDoisAtivo,
+        };
+
+        res.status(200).json(resposta);
     });
 
-server.listen(4002, () => {
-    console.log('Servidor rodando na porta 4002');
+app.listen(port, () => {
+    console.log(`Servidor rodando na porta ${port}`);
 });
