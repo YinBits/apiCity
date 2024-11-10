@@ -20,19 +20,21 @@ let timestampAtual = null;
 let timestampProximo = null;
 
 app.route('/')
-    .post((req, res) => {
-        const {SL} = req.body;
-
+    .post(
+        bodyParser.urlencoded({ extended: false}),
+        (req, res) => {
+        const SL = req.body.SL;
+        console.log(`Recebeu do arduino ${req.body.SL}`);
         sensorLumAtual = SL;
         
         const estadoLuzes = lightsOfCity(SL);
-       
         const agora = Date.now(); 
 
         if (timestampAtual === null) {
             timestampAtual = agora;
             timestampProximo = agora + 10000; // 10 segundos no futuro
         }
+
         if (agora >= timestampProximo) {
             semafaroUmAtivo = semafaroUmAtivo === 0 ? 1 : 0  
             semafaroDoisAtivo = semafaroUmAtivo === 1 ? 0 : 1;
@@ -44,8 +46,6 @@ app.route('/')
             timestampProximo = agora + 10000; // Atualiza para 10 segundos depois
         }
 
-      
-        
         // Formata a resposta como uma string
         const resposta = `${estadoLuzes}${semafaroUmAtivo}${semafaroDoisAtivo}`;
 

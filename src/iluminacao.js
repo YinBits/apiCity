@@ -1,18 +1,14 @@
 export function lightsOfCity(sensorLum) {
-    let lights = false;
+    let lights = 0;
 
-    if (sensorLum < 200) {
+    if (sensorLum < 40) {
         lights = 1;
         console.log("Cidade iluminada!");
     } else {
         lights = 0;
         console.log("Cidade não iluminada!");
     }
-
-    
-
     return lights;
-
 }
 
 export function Horario(){
