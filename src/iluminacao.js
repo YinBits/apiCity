@@ -1,7 +1,7 @@
 export function lightsOfCity(sensorLum) {
     let lights = 0;
 
-    if (sensorLum < 40) {
+    if (sensorLum > 40) {
         lights = 1;
         console.log("Cidade iluminada!");
     } else {
