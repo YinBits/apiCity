@@ -43,7 +43,7 @@ app.route('/')
 
             timestampAnterior = timestampAtual;
             timestampAtual = agora;
-            timestampProximo = agora + 10000; // Atualiza para 10 segundos depois
+            timestampProximo = agora + 5000; // Atualiza para 10 segundos depois
         }
 
         // Formata a resposta como uma string
